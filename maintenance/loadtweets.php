@@ -42,6 +42,15 @@
 		return $data->statuses_count;
 	}
 	
+	function totalFavorites($p){
+		global $twitterApi;
+		$p = trim($p);
+		if(!$twitterApi->validateUserParam($p)){ return false; }
+		$data = $twitterApi->query("1/users/show.json?" . $p);
+		if(is_array($data) && $data[0] === false){ dieout(l(bad("Error: " . $data[1] . "/" . $data[2]))); }
+		return $data->favourites_count;
+	}
+	
 	function importTweets($p){
 		global $twitterApi, $db, $config, $access, $search;
 		$p = trim($p);
@@ -129,35 +138,88 @@
 			echo l(bad("Nothing to insert.\n"));
 		}
 		
-		// Checking personal favorites -- scanning all
-		echo l("\n<strong>Syncing favourites...</strong>\n");
-		$pages = ceil($total / $maxCount); // Resetting these
-		$favs  = array();
+		// Get favorites
+		// No sinceID-support ._.
+		$tiQ = $db->query("SELECT `tweetid` FROM `".DTP."favorites` WHERE `favinguserid` = '" . $db->s($uid) . "' ORDER BY `id` DESC LIMIT 1");
+		if($db->numRows($tiQ) > 0){
+			$ti      = $db->fetch($tiQ);
+			$sinceID = $ti['tweetid'];
+		} else {
+			$sinceID = false;
+		}
+		
+		// Find total number of favorites
+		$total = totalFavorites($p);
+		//if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
+		$pages = ceil($total / $maxCount);
+		
+		echo l("Total favorites: <strong>" . $total . "</strong>, Pages: <strong>" . $pages . "</strong>\n");
+		if($sinceID){
+			echo l("Newest favorite I've got: <strong>" . $sinceID . "</strong>\n");
+		}
+		
+		$tweets = Array();
+		
+		// Retrieve favorites
 		for($i = 0; $i < $pages; $i++){
 			$path = "1/favorites.json?" . $p . "&count=" . $maxCount . ($i > 0 ? "&page=" . $i : "");
+			$path = "1/favorites.json?" . $p . "&count=" . $maxCount . ($sinceID ? "&since_id=" . $sinceID : "") . ($maxID ? "&max_id=" . $maxID : "");
 			echo l("Retrieving page <strong>#" . ($i+1) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
 			$data = $twitterApi->query($path);
 			if(is_array($data) && $data[0] === false){ dieout(l(bad("Error: " . $data[1] . "/" . $data[2]))); }
-			echo l("<strong>" . ($data ? count($data) : 0) . "</strong> total favorite tweets on this page\n");
+			echo l("<strong>" . ($data ? count($data) : 0) . "</strong> new favorites on this page\n");
 			if(!$data){ break; } // No more tweets
 			echo l("<ul>");
 			foreach($data as $tweet){
-				if($tweet->user->id_str == $uid){
-					echo l("<li>" . $tweet->id_str . " " . $tweet->created_at . "</li>\n");
-					$favs[] = $tweet->id_str;
-				}
+				echo l("<li>" . $tweet->id_str . " " . $tweet->created_at . "</li>\n");
+				$tweets[] = $twitterApi->transformTweet($tweet);
+				$maxID    = sprintf("%.0F", (float)((float)$tweet->id - 1));
 			}
 			echo l("</ul>");
-			if(count($data) > 0){ echo l("<strong>" . count($favs) . "</strong> favorite own tweets on this page\n"); }
-			if(count($data) < ($maxCount - 50)){ break; } // We've reached last page
+			if(count($data) < ($maxCount - 50)){
+				echo l("We've reached last page\n");
+				break;
+			}
 		}
-		$db->query("UPDATE `".DTP."tweets` SET `favorite` = '0'"); // Blank all favorites
-		$db->query("UPDATE `".DTP."tweets` SET `favorite` = '1' WHERE `tweetid` IN ('" . implode("', '", $favs) . "')");
-		echo l(good("Updated favorites!"));
+		
+		if(count($tweets) > 0){
+			// Ascending sort, oldest first
+			$tweets = array_reverse($tweets);
+			echo l("<strong>All tweets collected. Reconnecting to DB...</strong>\n");
+			$db->reconnect(); // Sometimes, DB connection times out during tweet loading. This is our counter-action
+			echo l("Inserting into DB...\n");
+			$error = false;
+			foreach($tweets as $tweet){
+				$q = $db->query($twitterApi->insertFavQuery($tweet, $uid));
+				if(!$q){
+					dieout(l(bad("DATABASE ERROR: " . $db->error())));
+				}
+				/*
+				// For now I skip word indexing
+				$text = $tweet['text'];
+				$te   = $tweet['extra'];
+				if(is_string($te)){ $te = @unserialize($tweet['extra']); }
+				if(is_array($te)){
+					// Because retweets might get cut off otherwise
+					$text = (array_key_exists("rt", $te) && !empty($te['rt']) && !empty($te['rt']['screenname']) && !empty($te['rt']['text'])) 
+						? "RT @" . $te['rt']['screenname'] . ": " . $te['rt']['text'] 
+						: $tweet['text'];
+				}
+				$search->index($db->insertID(), $text);
+				*/
+			}
+			echo !$error ? l(good("Done!\n")) : "";
+		} else {
+			echo l(bad("Nothing to insert.\n"));
+		}
 	}
 	
 	if($p){
 		importTweets($p);
+		//TODO optimize this query. A lot.
+		echo l("<strong>Checking for personal favorites...</strong> ");
+		$db->query("UPDATE `".DTP."tweets` SET `favorite` = (SELECT COUNT(*) > 0 FROM `".DTP."favorites` WHERE `".DTP."favorites`.tweetid = `".DTP."tweets`.tweetid)");
+		echo l("done.\n");
 	} else {
 		$q = $db->query("SELECT * FROM `".DTP."tweetusers` WHERE `enabled` = '1'");
 		if($db->numRows($q) > 0){
@@ -166,6 +228,10 @@
 				echo l("<strong>Trying to grab from user_id=" . $uid . "...</strong>\n");
 				importTweets("user_id=" . $uid);
 			}
+			//TODO optimize this query. A lot.
+			echo l("<strong>Checking for personal favorites...</strong> ");
+			$db->query("UPDATE `".DTP."tweets` SET `favorite` = (SELECT COUNT(*) > 0 FROM `".DTP."favorites` WHERE `".DTP."favorites`.tweetid = `".DTP."tweets`.tweetid)");
+			echo l("done.\n");
 		} else {
 			echo l(bad("No users to import to!"));
 		}

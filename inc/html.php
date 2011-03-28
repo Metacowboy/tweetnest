@@ -63,8 +63,10 @@
 		return $s;
 	}
 	
-	function displayDays($year, $month, $tabs = 3){
+	function displayDays($year, $month, $tabs = null, $tweets = true){
 		global $db, $selectedDate, $config;
+		if($tabs === null)
+			$tabs = 3;
 		if(!is_numeric($month) || !is_numeric($year) || (is_numeric($month) && ($month > 12 || $month < 1)) || (is_numeric($year) && $year < 2000)){ return false; }
 		$days   = array(); $max = 0; $total = 0;
 		$date   = getdate(mktime(1,0,0, $month, 1, $year)); $wd = $date['wday'];
@@ -72,7 +74,11 @@
 		$_year  = "YEAR(FROM_UNIXTIME(`time`" . DB_OFFSET . "))";
 		$_month = "MONTH(FROM_UNIXTIME(`time`" . DB_OFFSET . "))";
 		$path   = s(rtrim($config['path'], "/"));
-		$q = $db->query("SELECT DAY(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as d, " . $_month . " AS m, " . $_year . " AS y, `type`, COUNT(*) AS c FROM `".DTP."tweets` WHERE " . $_year . " = '" . $db->s($year) . "' AND " . $_month . " = '" . $db->s($month) . "' GROUP BY y, m, d, `type` ORDER BY y ASC, m ASC, d ASC, `type` ASC");
+		if($tweets) {
+			$q = $db->query("SELECT DAY(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as d, " . $_month . " AS m, " . $_year . " AS y, `type`, COUNT(*) AS c FROM `".DTP."tweets` WHERE " . $_year . " = '" . $db->s($year) . "' AND " . $_month . " = '" . $db->s($month) . "' GROUP BY y, m, d, `type` ORDER BY y ASC, m ASC, d ASC, `type` ASC");
+		} else {
+			$q = $db->query("SELECT DAY(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as d, " . $_month . " AS m, " . $_year . " AS y, `type`, COUNT(*) AS c FROM `".DTP."favorites` WHERE " . $_year . " = '" . $db->s($year) . "' AND " . $_month . " = '" . $db->s($month) . "' GROUP BY y, m, d, `type` ORDER BY y ASC, m ASC, d ASC, `type` ASC");
+		}
 		while($r = $db->fetch($q)){
 			if(!array_key_exists($r['d'], $days)){
 				$days[$r['d']] = array("total" => 0);
@@ -91,7 +97,10 @@
 				$s .= $y . "<div class=\"d\"><a title=\"" . s($d['total']) . " tweet" . (($d['total'] == 1) ? "" : "s") .
 				(!empty($d['c1']) ? ", " . s($d['c1']) . " repl" . ($d['c1'] == 1 ? "y" : "ies") : "") .
 				(!empty($d['c2']) ? ", " . s($d['c2']) . " retweet" . ($d['c2'] == 1 ? "" : "s") : "") .
-				"\" href=\"" . $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1)) . "\">" .
+				"\" href=\"" . ($tweets
+					? $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1))
+					: $path . "/fav_day.php?y=" . s($year) . "&amp;m=" . s(pad($month)) . "&amp;d=" . s(pad($i+1))) .
+				"\">" .
 				"<span class=\"p\" style=\"height:" . round((($d['total']/$max)*250), 2) . "px\">" .
 				"<span class=\"n\">" . ($d['total'] != 1 ? number_format($d['total']) : "") . "</span>" . 
 				(!empty($d['c1']) ? "<span class=\"r\" style=\"height:" . round((($d['c1']/$max)*250), 2) . "px\"></span>" : "") . 
@@ -100,7 +109,10 @@
 				($today ? "<strong>" : "") . s($i+1) . ($today ? "</strong>" : "") . 
 				"</span></a></div>\n";
 			} else {
-				$s .= $y . "<div class=\"d\"><a href=\"" . $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1)) . "\">" .
+				$s .= $y . "<div class=\"d\"><a href=\"" . ($tweets
+					? $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1))
+					: $path . "/fav_day.php?y=" . s($year) . "&amp;m=" . s(pad($month)) . "&amp;d=" . s(pad($i+1))) . 
+				"\">" .
 				"<span class=\"z\">0</span><span class=\"m" . (($wd == 0 || $wd == 6) ? " mm" : "") . ($today ? " ms" : "") . "\">" .
 				($today ? "<strong>" : "") . s($i+1) . ($today ? "</strong>" : "") . 
 				"</span></a></div>\n";
@@ -120,12 +132,13 @@
 		if(!empty($tweet['place'])){
 			$tweetplace = unserialize(str_replace("O:16:\"SimpleXMLElement\"", "O:8:\"stdClass\"", $tweet['place']));
 		}
+		$fav = array_key_exists("favinguserid", $tweet);
 		$rt = (array_key_exists("rt", $tweetextra) && !empty($tweetextra['rt']));
 		$t  = str_repeat("\t", $tabs);
 		if($rt){ $retweet = $tweetextra['rt']; }
 		$d  =   $t . "<div id=\"tweet-" . s($tweet['tweetid']) . "\" class=\"tweet" . (($tweet['type'] == 1) ? " reply" : "") . (($tweet['type'] == 2) ? " retweet" : "") . "\">\n" . 
 				($tweet['favorite'] ? $t . "\t<div class=\"fav\" title=\"A personal favorite\"><span>(A personal favorite)</span></div>\n" : "") .
-				$t . "\t<p class=\"text\">" . ($rt ? "<a class=\"rt\" href=\"http://twitter.com/" . $retweet['screenname'] . "\"><strong>" . $retweet['screenname'] . "</strong></a> " : "") . 
+				$t . "\t<p class=\"text\">" . ($rt ? "<a class=\"rt\" href=\"http://twitter.com/" . $retweet['screenname'] . "\"><strong>" . $retweet['screenname'] . "</strong></a> " : ($fav ? "<a href=\"http://twitter.com/" . $tweet['screenname'] . "\"><strong>@" . $tweet['screenname'] . "</strong></a>: " : "")) . 
 				nl2br(p(highlightQuery(linkifyTweet(
 					s(stupefyRaw($rt ? $twitterApi->entityDecode($retweet['text']) : $tweet['text']), ENT_NOQUOTES)
 				), $tweet), 3)) . "</p>\n" . 

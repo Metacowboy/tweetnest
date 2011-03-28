@@ -114,6 +114,8 @@
 					$t[$key] = $val;
 				} elseif($k == "user"){
 					$t['userid'] = (string) $v->id_str;
+					$t['screenname'] = (string) $v->screen_name;
+					$t['profileimage'] = (string) $v->profile_image_url;
 				} elseif($k == "retweeted_status"){
 					$rt = array(); $rte = array();
 					foreach(get_object_vars($v) as $kk => $vv){
@@ -157,5 +159,13 @@
 			global $db;
 			$type = ($t['text'][0] == "@") ? 1 : (preg_match("/RT @\w+/", $t['text']) ? 2 : 0);
 			return "INSERT INTO `".DTP."tweets` (`userid`, `tweetid`, `type`, `time`, `text`, `source`, `extra`, `coordinates`, `geo`, `place`, `contributors`) VALUES ('" . $db->s($t['userid']) . "', '" . $db->s($t['tweetid']) . "', '" . $db->s($type) . "', '" . $db->s($t['time']) . "', '" . $db->s($this->entityDecode($t['text'])) . "', '" . $db->s($t['source']) . "', '" . $db->s(serialize($t['extra'])) . "', '" . $db->s(serialize($t['coordinates'])) . "', '" . $db->s(serialize($t['geo'])) . "', '" . $db->s(serialize($t['place'])) . "', '" . $db->s(serialize($t['contributors'])) . "');";
+		}
+		
+		public function insertFavQuery($t, $user){
+			global $db;
+			$type = ($t['text'][0] == "@") ? 1 : (preg_match("/RT @\w+/", $t['text']) ? 2 : 0);
+			return "INSERT INTO `".DTP."favorites`" .
+				" (`favinguserid`, `userid`, `screenname`, `profileimage`, `tweetid`, `type`, `time`, `text`, `source`, `extra`, `coordinates`, `geo`, `place`, `contributors`)" .
+				" VALUES ('" . $db->s($user) . "', '" . $db->s($t['userid']) . "', '" . $db->s($t['screenname']) . "', '" . $db->s($t['profileimage']) . "', '" . $db->s($t['tweetid']) . "', '" . $db->s($type) . "', '" . $db->s($t['time']) . "', '" . $db->s($this->entityDecode($t['text'])) . "', '" . $db->s($t['source']) . "', '" . $db->s(serialize($t['extra'])) . "', '" . $db->s(serialize($t['coordinates'])) . "', '" . $db->s(serialize($t['geo'])) . "', '" . $db->s(serialize($t['place'])) . "', '" . $db->s(serialize($t['contributors'])) . "');";
 		}
 	}
