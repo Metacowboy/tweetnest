@@ -90,7 +90,7 @@
 		
 		// Find total number of tweets
 		$total = totalTweets($p);
-		if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
+		//if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
 		$pages = ceil($total / $maxCount);
 		$page = 0;
 		
@@ -179,11 +179,11 @@
 		
 		// Find total number of favorites
 		$total = totalFavorites($p);
-		if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
+		//if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
 		$pages = ceil($total / $maxCount);
 		$page = 0;
 		
-		echo l("Total favorites: <strong>" . $total . "</strong>, Pages: <strong>" . $pages . "</strong>\n");
+		echo l("Total favorites: <strong>" . $total . "</strong>, Approx. page total: <strong>" . $pages . "</strong>\n");
 		if($sinceID){
 			echo l("Newest favorite I've got: <strong>" . $sinceID . "</strong>\n");
 		}
