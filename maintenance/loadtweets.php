@@ -92,6 +92,7 @@
 		$total = totalTweets($p);
 		if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
 		$pages = ceil($total / $maxCount);
+		$page = 0;
 		
 		echo l("Total tweets: <strong>" . $total . "</strong>, Approx. page total: <strong>" . $pages . "</strong>\n");
 		if($sinceID){
@@ -105,7 +106,7 @@
 					"&include_rts=true&include_entities=true&count=" . $maxCount .
 					($sinceID ? "&since_id=" . $sinceID : "") . ($maxID ? "&max_id=" . $maxID : "");
 			// Announce
-			echo l("Retrieving page <strong>#" . ($i+1) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
+			echo l("Retrieving page <strong>#" . (++$page) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
 			// Get data
 			$data = $twitterApi->query($path);
 			// Drop out on connection error
@@ -178,8 +179,9 @@
 		
 		// Find total number of favorites
 		$total = totalFavorites($p);
-		//if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
+		if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
 		$pages = ceil($total / $maxCount);
+		$page = 0;
 		
 		echo l("Total favorites: <strong>" . $total . "</strong>, Pages: <strong>" . $pages . "</strong>\n");
 		if($sinceID){
@@ -196,7 +198,7 @@
 					"&include_rts=true&include_entities=true&count=" . $maxCount .
 					($sinceID ? "&since_id=" . $sinceID : "") . ($maxID ? "&max_id=" . $maxID : "");
 			// Announce
-			echo l("Retrieving page <strong>#" . ($i+1) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
+			echo l("Retrieving page <strong>#" . (++$page) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
 			// Get data
 			$data = $twitterApi->query($path);
 			// Drop out on connection error
