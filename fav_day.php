@@ -4,6 +4,8 @@
 	
 	require "inc/preheader.php";
 	
+	$filterMode = "favorites";
+	
 	$m = ltrim($_GET['m'], "0");
 	$d = ltrim($_GET['d'], "0");
 	if(!is_numeric($d) || !is_numeric($m) || !is_numeric($_GET['y']) || (is_numeric($d) && ($d > 31 || $d < 1)) || (is_numeric($m) && ($m > 12 || $m < 1)) || (is_numeric($_GET['y']) && $_GET['y'] < 2000)){ errorPage("Invalid year, month or day. Please specify a valid date."); }
@@ -15,5 +17,5 @@
 	$preBody      = displayDays($_GET['y'], $m, null, false);
 	
 	require "inc/header.php";
-	echo tweetsHTML($q, "day");
+	echo tweetsHTML($q, "fav_day");
 	require "inc/footer.php";

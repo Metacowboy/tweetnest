@@ -218,6 +218,29 @@
 					$s .= $t . "<div class=\"nextprev\">" . trim($nextprev) . "</div>\n";
 				}
 			}
+			elseif($mode == "fav_day"){
+				$nextprev = "";
+				$half     = "SELECT `tweetid`, `time`, YEAR(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as `year`, MONTH(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as `month`, DAY(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) as `day` FROM `".DTP."favorites` WHERE `time`";
+				$pTQ      = $db->query($half . " < '" . $db->s($first) . "' ORDER BY `time` DESC LIMIT 1");
+				$nTQ      = $db->query($half . " > '" . $db->s($last)  . "' ORDER BY `time` ASC LIMIT 1");
+				if($db->numRows($pTQ) > 0){
+					$prevTweet = $db->fetch($pTQ);
+					$nextprev .= "<a class=\"prev\" href=\"" . $path . "/favorites/" . 
+						s($prevTweet['year']) . "/" . s(pad($prevTweet['month'])) . "/" . s(pad($prevTweet['day'])) . 
+						"\">&larr; <span>" . date("F jS", mktime(4,0,0, $prevTweet['month'], $prevTweet['day'], $prevTweet['year'])) . 
+						"</span></a> ";
+				}
+				if($db->numRows($nTQ) > 0){
+					$nextTweet = $db->fetch($nTQ);
+					$nextprev .= "<a class=\"next\" href=\"" . $path . "/favorites/" . 
+						s($nextTweet['year']) . "/" . s(pad($nextTweet['month'])) . "/" . s(pad($nextTweet['day'])) . 
+						"\"><span>" . date("F jS", mktime(4,0,0, $nextTweet['month'], $nextTweet['day'], $nextTweet['year'])) . 
+						"</span> &rarr;</a>";
+				}
+				if($nextprev){
+					$s .= $t . "<div class=\"nextprev\">" . trim($nextprev) . "</div>\n";
+				}
+			}
 		} else {
 			$s = $t . "<div class=\"notweets\">No tweets here!</div>\n";
 			if($home){
