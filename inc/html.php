@@ -157,7 +157,7 @@
 		
 		$d  =   $t . "<div id=\"tweet-" . s($tweet['tweetid']) . "\" class=\"tweet" . (($tweet['type'] == 1) ? " reply" : "") . (($tweet['type'] == 2) ? " retweet" : "") . "\">\n" . 
 				($tweet['favorite'] ? $t . "\t<div class=\"fav\" title=\"A personal favorite\"><span>(A personal favorite)</span></div>\n" : "") .
-				$t . "\t<p class=\"text\">" . ($rt ? "<a class=\"rt\" href=\"http://twitter.com/" . $retweet['screenname'] . "\"><strong>" . $retweet['screenname'] . "</strong></a> " : "") . 
+				$t . "\t<p class=\"text\">" . ($rt ? "<a class=\"rt\" href=\"http://twitter.com/" . $retweet['screenname'] . "\"><strong>" . $retweet['screenname'] . "</strong></a><br>" : "<a href=\"http://twitter.com/" . $tweet['screenname'] . "\"><strong>" . $tweet['screenname'] . "</strong></a><br>") . 
 				nl2br(p(highlightQuery(emojifyTweet(
 					$htmlcontent
 				), $tweet), 3)) . "</p>\n" . 
