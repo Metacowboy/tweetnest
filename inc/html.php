@@ -8,7 +8,24 @@
 		$x      = str_repeat("\t", $tabs); $y = str_repeat("\t", $tabs+1);
 		$url    = explode("?", $_SERVER['REQUEST_URI'], 2);
 		$path   = s(rtrim($config['path'], "/"));
-		$q = $db->query("SELECT MONTH(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) AS m, YEAR(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) AS y, COUNT(*) AS c FROM `".DTP."tweets` GROUP BY y, m ORDER BY y DESC, m DESC");
+		$mode_path = $path;
+		$db_table = "tweets";
+		
+		switch($filterMode) {
+		    case "favorites":
+		    case "favorites search":
+		        $mode_path .= "/favs"
+		        $db_table = "favorites"
+		        break;
+		    case "tweets":
+		    case "search":
+		        break;
+		    default:
+		        $filterMode = "tweets";
+		        break;
+		}
+		
+        $q = $db->query("SELECT MONTH(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) AS m, YEAR(FROM_UNIXTIME(`time`" . DB_OFFSET . ")) AS y, COUNT(*) AS c FROM `".DTP.$db_table."` GROUP BY y, m ORDER BY y DESC, m DESC");
 		while($r = $db->fetch($q)){
 			$months[] = $r;
 			if($r['c'] > $max){ $max = $r['c']; }
@@ -17,12 +34,8 @@
 		}
 		$searching = $home ? false : (count($highlightedMonths) > 0);
 		$s = "<ul id=\"months\">\n";
-		if(!$home){
-			$s .= $y . "<li class=\"home\"><a href=\"" . $path . "/\"><span class=\"m" . ($searching ? " ms\"><span class=\"a\">" : "\">") . "Recent tweets" . ($searching ? "</span><span class=\"b\"> (exit " . s($filterMode) . ")</span>" : "") . "</span></a></li>\n";
-		}
-		if(!$searching){
-			$s .= $y . "<li class=\"fav\"><a href=\"" . $path . "/favorites\"><span class=\"m\">Favorites</span></a></li>\n";
-		}
+        $s .= $y . "<li class=\"home\"><a href=\"" . $path . "/\"><span class=\"m" . ($searching ? " ms\"><span class=\"a\">" : "\">") . "Recent tweets" . ($filterMode != "tweets" ? "</span><span class=\"b\"> (exit " . s($filterMode) . ")</span>" : "") . "</span></a></li>\n";
+		$s .= $y . "<li class=\"fav\"><a href=\"" . $path . "/favs\"><span class=\"m\">Recent favorites" . ($filterMode != "favorites" ? "</span><span class=\"b\"> (exit " . s($filterMode) . ")</span>" : "") . "</span></a></li>\n";
 		if(count($highlightedMonths) > 0 && (!empty($_GET['m']) && !empty($_GET['y']))){
 			// Generating URL
 			$g    = $_GET;
@@ -54,7 +67,7 @@
 			}
 			$c  = trim($c);
 			$s .= $y . "<li" . ($c ? " class=\"" . $c . "\"" : "") . ">" .
-			"<a href=\"" . ($cc > 0 ? s($pURL) : $path . "/" . s($m['y']) . "/" . s(pad($m['m']))) . "\">" .
+			"<a href=\"" . ($cc > 0 ? s($pURL) : $mode_path . "/" . s($m['y']) . "/" . s(pad($m['m']))) . "\">" .
 			"<span class=\"m\">" . date("F Y", mktime(1,0,0,$m['m'],1,$m['y'])) . "</span>" .
 			"<span class=\"n\"> " . number_format($m['c']) . ($cc > 0 ? " <strong>(" . number_format($cc) . ")</strong>" : "") . 
 			"</span><span class=\"p\" style=\"width:" . round((($m['c']/$max)*100), 2) . "%\"></span></a></li>\n";
@@ -97,10 +110,7 @@
 				$s .= $y . "<div class=\"d\"><a title=\"" . s($d['total']) . " tweet" . (($d['total'] == 1) ? "" : "s") .
 				(!empty($d['c1']) ? ", " . s($d['c1']) . " repl" . ($d['c1'] == 1 ? "y" : "ies") : "") .
 				(!empty($d['c2']) ? ", " . s($d['c2']) . " retweet" . ($d['c2'] == 1 ? "" : "s") : "") .
-				"\" href=\"" . ($tweets
-					? $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1))
-					: $path . "/fav_day.php?y=" . s($year) . "&amp;m=" . s(pad($month)) . "&amp;d=" . s(pad($i+1))) .
-				"\">" .
+				"\" href=\"" . $path . ($tweets ? '' : '/favs') . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1)) . "\">" .
 				"<span class=\"p\" style=\"height:" . round((($d['total']/$max)*250), 2) . "px\">" .
 				"<span class=\"n\">" . ($d['total'] != 1 ? number_format($d['total']) : "") . "</span>" . 
 				(!empty($d['c1']) ? "<span class=\"r\" style=\"height:" . round((($d['c1']/$max)*250), 2) . "px\"></span>" : "") . 
@@ -109,9 +119,7 @@
 				($today ? "<strong>" : "") . s($i+1) . ($today ? "</strong>" : "") . 
 				"</span></a></div>\n";
 			} else {
-				$s .= $y . "<div class=\"d\"><a href=\"" . ($tweets
-					? $path . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1))
-					: $path . "/fav_day.php?y=" . s($year) . "&amp;m=" . s(pad($month)) . "&amp;d=" . s(pad($i+1))) . 
+				$s .= $y . "<div class=\"d\"><a href=\"" . $path .($tweets ? '' : '/favs') . "/" . s($year) . "/" . s(pad($month)) . "/" . s(pad($i+1)) . 
 				"\">" .
 				"<span class=\"z\">0</span><span class=\"m" . (($wd == 0 || $wd == 6) ? " mm" : "") . ($today ? " ms" : "") . "\">" .
 				($today ? "<strong>" : "") . s($i+1) . ($today ? "</strong>" : "") . 
