@@ -52,11 +52,10 @@
 	$isSearch          = false;
 	
 	// Getting database time offset
-	$dbtQ = $db->query("SELECT TIME_FORMAT(NOW() - UTC_TIMESTAMP(), '%H:%i') AS `diff`");
+	$dbtQ = $db->query("SELECT TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP()) AS `diff`");
 	$dbtR = $db->fetch($dbtQ);
 	
-	list($off_hour, $off_minute) = explode(":", $dbtR['diff'], 2);
-	$dbOffset          = date("Z") - ($off_hour*60 + $off_minute)*60;
+	$dbOffset          = date("Z") - $dbtR['diff'];
 	if(!is_numeric($dbOffset)){ $dbOffset = 0; }
 	$dbOffset          = $dbOffset >= 0 ? "+" . $dbOffset : $dbOffset; // Explicit positivity/negativity
 	
