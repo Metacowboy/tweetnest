@@ -46,7 +46,7 @@
 	
 	$selectedDate      = array("y" => 0, "m" => 0, "d" => 0);
 	$highlightedMonths = array();
-	$filterMode        = "search";
+	$filterMode        = "tweets";
 	$home              = false;
 	$jQueryVersion     = "1.5.1";
 	$isSearch          = false;
