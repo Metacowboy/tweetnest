@@ -50,6 +50,10 @@
 					} catch(Exception $e){
 						throw new Exception("Could not connect to the DB: " . $e->getMessage());
 					}
+					
+					// set connection to utf8
+					$this->query('SET NAMES utf8');
+					
 					break;
 			}
 		}

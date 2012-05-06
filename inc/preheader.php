@@ -38,6 +38,7 @@
 	$search = new TweetNestSearch();
 	
 	// Outputting various generic parts
+	require "emoji.php";
 	require "html.php";
 	
 	// Extensions
@@ -48,6 +49,7 @@
 	$filterMode        = "search";
 	$home              = false;
 	$jQueryVersion     = "1.5.1";
+	$isSearch          = false;
 	
 	// Getting database time offset
 	$dbtQ = $db->query("SELECT TIME_FORMAT(NOW() - UTC_TIMESTAMP(), '%H%i') AS `diff`");
