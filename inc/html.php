@@ -14,8 +14,8 @@
 		switch($filterMode) {
 		    case "favorites":
 		    case "favorites search":
-		        $mode_path .= "/favs"
-		        $db_table = "favorites"
+		        $mode_path .= "/favs";
+		        $db_table = "favorites";
 		        break;
 		    case "tweets":
 		    case "search":
