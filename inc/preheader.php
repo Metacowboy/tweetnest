@@ -52,10 +52,12 @@
 	$isSearch          = false;
 	
 	// Getting database time offset
-	$dbtQ = $db->query("SELECT TIME_FORMAT(NOW() - UTC_TIMESTAMP(), '%H%i') AS `diff`");
+	$dbtQ = $db->query("SELECT TIME_FORMAT(NOW() - UTC_TIMESTAMP(), '%H:%i') AS `diff`");
 	$dbtR = $db->fetch($dbtQ);
 	
-	$dbOffset          = date("Z") - ($dbtR['diff'] * 36); if(!is_numeric($dbOffset)){ $dbOffset = 0; }
+	list($off_hour, $off_minute) = explode(":", $dbtR['diff'], 2);
+	$dbOffset          = date("Z") - ($off_hour*60 + $off_minute)*60;
+	if(!is_numeric($dbOffset)){ $dbOffset = 0; }
 	$dbOffset          = $dbOffset >= 0 ? "+" . $dbOffset : $dbOffset; // Explicit positivity/negativity
 	
 	global $db, $twitterApi, $search, $selectedDate, $highlightedMonths, $filterMode, $home, $dbOffset;
