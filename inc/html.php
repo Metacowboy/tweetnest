@@ -225,14 +225,14 @@
 				$nTQ      = $db->query($half . " > '" . $db->s($last)  . "' ORDER BY `time` ASC LIMIT 1");
 				if($db->numRows($pTQ) > 0){
 					$prevTweet = $db->fetch($pTQ);
-					$nextprev .= "<a class=\"prev\" href=\"" . $path . "/favorites/" . 
+					$nextprev .= "<a class=\"prev\" href=\"" . $path . "/favs/" . 
 						s($prevTweet['year']) . "/" . s(pad($prevTweet['month'])) . "/" . s(pad($prevTweet['day'])) . 
 						"\">&larr; <span>" . date("F jS", mktime(4,0,0, $prevTweet['month'], $prevTweet['day'], $prevTweet['year'])) . 
 						"</span></a> ";
 				}
 				if($db->numRows($nTQ) > 0){
 					$nextTweet = $db->fetch($nTQ);
-					$nextprev .= "<a class=\"next\" href=\"" . $path . "/favorites/" . 
+					$nextprev .= "<a class=\"next\" href=\"" . $path . "/favs/" . 
 						s($nextTweet['year']) . "/" . s(pad($nextTweet['month'])) . "/" . s(pad($nextTweet['day'])) . 
 						"\"><span>" . date("F jS", mktime(4,0,0, $nextTweet['month'], $nextTweet['day'], $nextTweet['year'])) . 
 						"</span> &rarr;</a>";
