@@ -52,7 +52,7 @@
 	$isSearch          = false;
 	
 	// Getting database time offset
-	$dbtQ = $db->query("SELECT TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP()) AS `diff`");
+	$dbtQ = $db->query("SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) AS `diff`");
 	$dbtR = $db->fetch($dbtQ);
 	
 	$dbOffset          = date("Z") - $dbtR['diff'];
