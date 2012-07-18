@@ -92,12 +92,13 @@
 		$total = totalTweets($p);
 		//if($total > 3200){ $total = 3200; } // Due to current Twitter limitation
 		$pages = ceil($total / $maxCount);
-		$page = 0;
 		
 		echo l("Total tweets: <strong>" . $total . "</strong>, Approx. page total: <strong>" . $pages . "</strong>\n");
 		if($sinceID){
 			echo l("Newest tweet I've got: <strong>" . $sinceID . "</strong>\n");
 		}
+		
+		$page = 1;
 		
 		// Retrieve tweets
 		do {
@@ -106,7 +107,7 @@
 					"&include_rts=true&include_entities=true&count=" . $maxCount .
 					($sinceID ? "&since_id=" . $sinceID : "") . ($maxID ? "&max_id=" . $maxID : "");
 			// Announce
-			echo l("Retrieving page <strong>#" . (++$page) . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
+			echo l("Retrieving page <strong>#" . $page . "</strong>: <span class=\"address\">" . ls($path) . "</span>\n");
 			// Get data
 			$data = $twitterApi->query($path);
 			// Drop out on connection error
@@ -132,10 +133,7 @@
 				}
 				echo l("</ul>");
 			}
-			/*if(count($data) < ($maxCount - 50)){
-				echo l("We've reached last page\n");
-				break;
-			}*/
+			$page++;
 		} while(!empty($data));
 		
 		if(count($tweets) > 0){
