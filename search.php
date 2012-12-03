@@ -3,6 +3,8 @@
 	// Search page
 	
 	require "inc/preheader.php";
+	$isSearch = true;
+	$filterMode = "search";
 	
 	$path = rtrim($config['path'], "/");
 	if(empty($_GET['q'])){ header("Location: " . $path . "/"); exit; }

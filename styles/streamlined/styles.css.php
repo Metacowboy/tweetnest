@@ -211,8 +211,22 @@ p.meta a:hover {
 	color: <?php echo css("tweet_meta_link_color"); ?>;
 }
 
-.tweet .pic {
+.tweet .avatar {
 	float: left;
+	display: block;
+	margin: 0 15px 5px 0;
+<?php if($config['style']['tweet_image_border']){ ?>	border-bottom: 1px solid <?php echo css("tweet_image_shadow_color"); ?>;<?php echo "\n"; } ?>
+}
+
+.tweet .avatar img {
+	display: block;
+<?php if($config['style']['tweet_image_border']){ ?>	border: 4px solid <?php echo css("tweet_image_border_color"); ?>;<?php echo "\n"; } ?>
+	max-width: 48px;
+	max-height: 48px;
+}
+
+.tweet .pic {
+	float: right;
 	display: block;
 	margin: 0 15px 5px 0;
 <?php if($config['style']['tweet_image_border']){ ?>	border-bottom: 1px solid <?php echo css("tweet_image_shadow_color"); ?>;<?php echo "\n"; } ?>

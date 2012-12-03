@@ -38,6 +38,7 @@
 	$search = new TweetNestSearch();
 	
 	// Outputting various generic parts
+	require "emoji.php";
 	require "html.php";
 	
 	// Extensions
@@ -45,9 +46,10 @@
 	
 	$selectedDate      = array("y" => 0, "m" => 0, "d" => 0);
 	$highlightedMonths = array();
-	$filterMode        = "search";
+	$filterMode        = "tweets";
 	$home              = false;
 	$jQueryVersion     = "1.5.1";
+	$isSearch          = false;
 	
 	// Getting database time offset
 	$dbtQ = $db->query("SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) AS `diff`");

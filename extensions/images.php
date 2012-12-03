@@ -50,18 +50,28 @@
 							$displaylink = $linkmap ? $linkmap[$link] : $link;
 							$imgs[$displaylink] = $http . "://p.twimg.com" . $l['path'] . ":thumb";
 						}
+						if($domain == "flic.kr"){
+							$imgid = explode("/",$l['path']);
+							$c = count($imgid) - 1;
+							$imgid = $imgid[$c];
+							$imgs[$link] = "http://flic.kr/p/img/".$imgid."_m.jpg";
+						}
 						if($domain == "twitpic.com"){
 							$imgs[$link] = $http . "://twitpic.com/show/thumb/" . $imgid;
 						}
 						if($domain == "yfrog.com" || $domain == "yfrog.us"){
 							$imgs[$link] = $http . "://yfrog.com/" . $imgid . ".th.jpg";
 						}
-						if($domain == "tweetphoto.com" || $domain == "pic.gd" || $domain == "plixi.com"){
-							$imgs[$link] = $http . "://tweetphotoapi.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=" . $link;
+						if($domain == "tweetphoto.com" || $domain == "pic.gd" || $domain == "plixi.com" || $domain == "lockerz.com"){
+							$imgs[$link] = "http://api.plixi.com/api/tpapi.svc/imagefromurl?size=medium&url=" . $link;
 						}
 						if($domain == "twitgoo.com"){
-							$values = simplexml_load_string(getURL($http . "://twitgoo.com/api/message/info/" . $imgid));
-							$imgs[$link] = (string)$values->thumburl;
+							$values = simplexml_load_string(getURL("http://twitgoo.com/api/message/info/" . $imgid));
+							$imgs[$link] = (string) $values->thumburl;
+						}
+						if($domain == "pixi.li"){
+							$values = simplexml_load_string(getURL("http://pixi.li/service/oembed?url=http://pixi.li/".$imgid."&maxwidth=300&format=xml"));
+							$imgs[$link] = (string) $values->url;
 						}
 						if($domain == "img.ly"){
 							$imgs[$link] = $http . "://img.ly/show/thumb/" . $imgid;
